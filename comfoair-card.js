@@ -13,6 +13,31 @@ class ComfoAirCard extends LitElement {
     };
   }
 
+  _state(entity) {
+    return this.hass.states[entity]?.state ?? 'n/a';
+  }
+
+  _attr(entity, attr) {
+    return this.hass.states[entity]?.attributes?.[attr] ?? 'n/a';
+  }
+
+  _num(entity) {
+    const val = parseFloat(this.hass.states[entity]?.state);
+    return isNaN(val) ? 0 : val;
+  }
+
+  _prefix() {
+    return this.config.prefix || this.config.entity.split('.')[1];
+  }
+
+  _sensor(name) {
+    return `sensor.${this._prefix()}_${name}`;
+  }
+
+  _binary(name) {
+    return `binary_sensor.${this._prefix()}_${name}`;
+  }
+
   render() {
     return html`
     <ha-card>
@@ -20,20 +45,20 @@ class ComfoAirCard extends LitElement {
       <div class="bg">
           <div class="flex-container">
               <div class="flex-col-out">
-                  <div>${this.hass.states['sensor.comfoair_outside_air_temperature'].state}°C</div>
-                  <div class="fan-state"><ha-icon icon="mdi:speedometer"></ha-icon></ha-icon> ${Math.trunc(this.hass.states['sensor.comfoair_intake_fan_speed_rpm'].state)} rpm</div>
-                  <div>${this.hass.states['sensor.comfoair_exhaust_air_temperature'].state}°C</div>
-                  <div class="fan-state"><ha-icon icon="mdi:speedometer"></ha-icon> ${Math.trunc(this.hass.states['sensor.comfoair_exhaust_fan_speed_rpm'].state)} rpm</div>
+                  <div>${this._state(this._sensor('outside_air_temperature'))}°C</div>
+                  <div class="fan-state"><ha-icon icon="mdi:speedometer"></ha-icon> ${Math.trunc(this._num(this._sensor('intake_fan_speed_rpm')))} rpm</div>
+                  <div>${this._state(this._sensor('exhaust_air_temperature'))}°C</div>
+                  <div class="fan-state"><ha-icon icon="mdi:speedometer"></ha-icon> ${Math.trunc(this._num(this._sensor('exhaust_fan_speed_rpm')))} rpm</div>
               </div>
               <div class="flex-col-main">
-                  <div>${this.hass.states[this.config.entity].attributes.temperature}°C</div>
-                  <div><ha-icon class="spin" icon="mdi:${({'auto': 'fan', 'off': 'fan-off', low: 'fan-speed-1', medium: 'fan-speed-2', high: 'fan-speed-3'}[this.hass.states[this.config.entity].attributes.fan_mode])}"></ha-icon></div>
+                  <div>${this._attr(this.config.entity, 'temperature')}°C</div>
+                  <div><ha-icon class="spin" icon="mdi:${({'auto': 'fan', 'off': 'fan-off', low: 'fan-speed-1', medium: 'fan-speed-2', high: 'fan-speed-3'}[this._attr(this.config.entity, 'fan_mode')])}"></ha-icon></div>
               </div>
               <div class="flex-col-in">
-                  <div>${this.hass.states['sensor.comfoair_return_air_temperature'].state}°C</div>
-                  <div class="fan-state"><ha-icon icon="mdi:fan"></ha-icon> ${Math.trunc(this.hass.states['sensor.comfoair_return_air_level'].state)}%</div>
-                  <div>${this.hass.states['sensor.comfoair_supply_air_temperature'].state}°C</div>
-                  <div class="fan-state"><ha-icon icon="mdi:fan"></ha-icon> ${Math.trunc(this.hass.states['sensor.comfoair_supply_air_level'].state)}%</div>
+                  <div>${this._state(this._sensor('return_air_temperature'))}°C</div>
+                  <div class="fan-state"><ha-icon icon="mdi:fan"></ha-icon> ${Math.trunc(this._num(this._sensor('return_air_level')))}%</div>
+                  <div>${this._state(this._sensor('supply_air_temperature'))}°C</div>
+                  <div class="fan-state"><ha-icon icon="mdi:fan"></ha-icon> ${Math.trunc(this._num(this._sensor('supply_air_level')))}%</div>
               </div>
           </div>
       </div>
@@ -50,7 +75,7 @@ class ComfoAirCard extends LitElement {
   }
 
   getFanTmpl(){
-    if(this.hass.states['binary_sensor.comfoair_supply_fan_active'].state == 'on'){
+    if(this._state(this._binary('supply_fan_active')) == 'on'){
       return html`<ha-icon icon="mdi:fan"></ha-icon>`;
     }else{
       return html`<ha-icon class="inactive" icon="mdi:fan"></ha-icon>`;
@@ -58,7 +83,7 @@ class ComfoAirCard extends LitElement {
   }
 
   getAirFilterTmpl(){
-    if(this.hass.states['sensor.comfoair_filter_status'].state == 'Full'){
+    if(this._state(this._sensor('filter_status')) == 'Full'){
       return html`<ha-icon class="warning" icon="mdi:air-filter"></ha-icon>`;
     }else{
       return html`<ha-icon class="inactive" icon="mdi:air-filter"></ha-icon>`;
@@ -66,7 +91,7 @@ class ComfoAirCard extends LitElement {
   }
 
   getBypassTmpl(){
-    if(this.hass.states['binary_sensor.comfoair_bypass_valve_open'].state == 'on'){
+    if(this._state(this._binary('bypass_valve_open')) == 'on'){
       return html`<ha-icon icon="mdi:electric-switch"></ha-icon>`;
     }else{
       return html`<ha-icon class="inactive" icon="mdi:electric-switch"></ha-icon>`;
@@ -74,7 +99,7 @@ class ComfoAirCard extends LitElement {
   }
 
   getPreHeatTmpl(){
-    if(this.hass.states['binary_sensor.comfoair_preheating_state'].state == 'on'){
+    if(this._state(this._binary('preheating_state')) == 'on'){
       return html`<ha-icon icon="mdi:radiator"></ha-icon>`;
     }else{
       return html`<ha-icon class="inactive" icon="mdi:radiator"></ha-icon>`;
@@ -82,7 +107,7 @@ class ComfoAirCard extends LitElement {
   }
 
   getSummerModeTmpl(){
-    if(this.hass.states['binary_sensor.comfoair_summer_mode'].state == 'off'){
+    if(this._state(this._binary('summer_mode')) == 'off'){
       return html`<ha-icon icon="mdi:snowflake"></ha-icon>`;
     }else{
       return html`<ha-icon class="inactive" icon="mdi:weather-sunny"></ha-icon>`;
@@ -168,7 +193,7 @@ class ComfoAirCard extends LitElement {
     }
 
     .warning {
-      color: color: #d80707db;
+      color: #d80707db;
     }
 
   @keyframes spin {
