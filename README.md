@@ -16,6 +16,7 @@ resources:
     url: /local/lovelace-comfoair/comfoair-card.js
 ```
 * Add a card with `type: 'custom:comfoair-card'` and `entity: 'climate.put-your-comfoair-name-here'` to your UI.
+* Ensure the sensors created by [esphome-comfoair](https://github.com/wichers/esphome-comfoair) exist in Home Assistant. Missing sensors will simply show `n/a` in the card.
 * Restart home assistant
 * ???
 * Profit!
